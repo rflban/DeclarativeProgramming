@@ -1,7 +1,7 @@
-\chapter{Практические задания}
+\chapter{Практическая часть}
 
 \section{Задание 1}
-В таблице 0.1 приведены выражения и результат их вычисления.
+В таблице 2.1 приведены выражения и результат их вычисления.
 \begin{table}[H]
     \centering
     \caption{Результаты вычисления выражений задания \No{}1}
@@ -24,51 +24,51 @@
 \begin{table}[H]
     \centering
     \caption{Результаты вычисления выражений задания \No{}2}
-	\begin{tabular}{|c|c|}
+	\begin{tabular}{|c|c|c|}
  	\hline
-    Выражение & Результат \\
+    \No{} & Выражение & Результат \\
  	\hline
- 	(list 'Fred 'and Wilma) & ошибка \\
+    1 & (list 'Fred 'and 'Wilma) & (FRED AND WILMA) \\
  	\hline
-    (list 'Fred '(and Wilma)) & (FRED (AND WILMA))\\
+    2 & (list 'Fred '(and Wilma)) & (FRED (AND WILMA))\\
  	\hline
-    (cons nil nil) & (NIL) \\
+    3 & (cons nil nil) & (NIL) \\
  	\hline
-    (cons t nil) & (T) \\
+    4 & (cons t nil) & (T) \\
  	\hline
-    (cons nil t) & (NIL .T)\\
+    5 & (cons nil t) & (NIL .T)\\
  	\hline
-    (list nil) & (NIL) \\
+    6 & (list nil) & (NIL) \\
  	\hline
-    (cons (t) nil) & ошибка \\
+    7 & (cons '(t) nil) & ((T)) \\
  	\hline
-    (list '(one two) '(free temp)) & ((ONE TWO) (FREE TEMP)) \\
+    8 & (list '(one two) '(free temp)) & ((ONE TWO) (FREE TEMP)) \\
  	\hline
-    (cons 'Fred '(and Wilma)) & (FRED AND WILMA) \\
+    9 & (cons 'Fred '(and Wilma)) & (FRED AND WILMA) \\
  	\hline
-    (cons 'Fred '(Wilma)) & (FRED WILMA) \\
+    10 & (cons 'Fred '(Wilma)) & (FRED WILMA) \\
  	\hline
-    (list nil nil) & (NIL NIL) \\
+    11 & (list nil nil) & (NIL NIL) \\
  	\hline
-    (list t nil) & (T NIL) \\
+    12 & (list t nil) & (T NIL) \\
  	\hline
-    (list nil t) & (NIL T) \\
+    13 & (list nil t) & (NIL T) \\
  	\hline
-    (cons t (list nil)) & (T NIL) \\
+    14 & (cons t (list nil)) & (T NIL) \\
  	\hline
-    (list (t) nil) & ошибка \\
+    15 & (list (t) nil) & ((T) NIL) \\
  	\hline
-    (cons '(one two) '(free temp)) & ((ONE TWO) FREE TEMP) \\
+    16 & (cons '(one two) '(free temp)) & ((ONE TWO) FREE TEMP) \\
  	\hline
 	\end{tabular}
 \end{table}
-В таблице 0.2 приведены выражения и результат их вычисления.
+В таблице 2.2 приведены выражения и результат их вычисления.
 
 \section{Задание 3}
-В листинге 1 приведён текст трёх функций, а в комментариях под каждой функцией - значение, которое она возвращает.
+В листинге 2.1 приведён текст трёх функций, при создании которых использовалась функция list, а в комментариях под каждой функцией - значение, которое она возвращает.
 
 \lstset{language=lisp}
-\begin{lstlisting}[caption={Примеры функций, возвращающих списки}]
+\begin{lstlisting}[caption={Примеры функций с использованием функции list}]
 (defun f1 (ar1 ar2 ar3 ar4)
   (list (list ar1 ar2) (list ar3 ar4)))
 ; ((ar1 ar2) (ar3 ar4))
@@ -82,23 +82,38 @@
 ; (((ar1)))
 \end{lstlisting}
 
-На рисунках 0.1-0.3 изображены списочные ячейки результатов рассмотренных выше функций.
+В листинге 2.2 приведён текст функций аналогичных функциям из листинга 2.3, но для их создания использовалась функция cons.
 
+\begin{lstlisting}[caption={Примеры функций с использованием функции list}]
+(defun f1 (ar1 ar2 ar3 ar4)
+  (cons (cons ar1 (cons ar2 nil)) (cons (cons ar3 (cons ar4 nil)) nil)))
+; ((ar1 ar2) (ar3 ar4))
+
+(defun f2 (ar1 ar2)
+  (cons (cons ar1 nil) (cons (cons ar2 nil) nil)))
+; ((ar1) (ar2))
+
+(defun f3 (ar1)
+  (cons (cons (cons ar1 nil) nil) nil))
+; (((ar1)))
+\end{lstlisting}
+
+На рисунках 2.1-2.3 изображены списочные ячейки результатов рассмотренных выше функций.
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.75]{data/pdf/02-01.pdf}
+    \includegraphics[scale=0.60]{data/pdf/02-01.pdf}
     \caption{Список ((ar1 ar2) (ar3 ar4))}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.75]{data/pdf/02-02.pdf}
+    \includegraphics[scale=0.60]{data/pdf/02-02.pdf}
     \caption{Список ((ar1) (ar2))}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.75]{data/pdf/02-03.pdf}
+    \includegraphics[scale=0.60]{data/pdf/02-03.pdf}
     \caption{Список (((ar1)))}
 \end{figure}
 
