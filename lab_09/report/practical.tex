@@ -1,0 +1,286 @@
+\chapter{Практическая часть}
+
+\lstset{language=lisp}
+
+\section{Задание \No{}1}
+\textbf{Условие:}\\Написать предикат, который возвращает t, если два его множество-аргумента содержат одни и те же элементы, порядок которых не имеет значения.
+
+В литинге 2.1 приведен текст решения дааной задачи на языке Common Lisp.
+
+\begin{lstlisting}[caption={Задание \No{}1}]
+;;; fun
+(defun set-equal (l1 l2)
+  (and (= (length l1) (length l2))
+       (reduce #'(lambda (val1 val2) (and val1 val2))
+               (mapcar #'(lambda (e1)
+                           (reduce #'(lambda (val1 val2) (or val1 val2))
+                                   (mapcar #'(lambda (e2)
+                                               (equal e1 e2))
+                                           l2)))
+                       l1))))
+
+;;; rec
+(defun help1 (e1 l2)
+  (cond ((null l2) nil)
+        (t (or (equal e1 (car l2))
+               (help1 e1 (cdr l2))))))
+
+(defun help2 (l1 l2)
+  (cond ((null l1) t)
+        (t (and (help1 (car l1) l2)
+                (help2 (cdr l1) l2)))))
+
+(defun set-equal (l1 l2)
+  (and (= (length l1) (length l2))
+       (help2 l1 l2)))
+
+;;; test
+(set-equal '(1 2 3) '(1 3 2)) ; T
+(set-equal '(1 2 3) '(1 5 2 3)) ; NIL
+(set-equal '(1 5 2 3) '(1 2 3)) ; NIL
+\end{lstlisting}
+
+Способ с использованием функционалов состоит в том, что необходимо составить список-маску, в котором каждый элемент соотвествует по порядку каждому элементу из первого списка-аргумента функции. Если во втором списке есть хотя бы один элемент, равный $i$-му элементу первого списка, то $i$-ый элемент маски равен \textbf{t}, иначе - \textbf{nil}. Если в списке-маске есть хотя бы один \textbf{nil}, то весь результат равен \textbf{nil}, иначе -  \textbf{t}.
+
+Рекурсивный способ решения данной задачи так же заключается в полном переборе: каждый элемент из первого списка сравнивается с каждым из второго, если нет ни одного совпадения, то ответ - \textbf{nil}, иначе - \textbf{t}.
+
+В обоих случаях присутствует начальная проверка на совпадение длин списков-множеств, которая для равных должна совпадать.
+
+\section{Задание \No{}2}
+\textbf{Условие:}\\Напишите необходимые функции, которые обрабатывают таблицу из точечных пар: (страна . столица), и возвращают по стране - столицу, а по столице - страну.
+
+В литинге 2.2 приведен текст решения дааной задачи на языке Common Lisp.
+
+\begin{lstlisting}[caption={Задание \No{}2}]
+;;; fun
+(defun table_create (countries capitals)
+  (mapcar #'cons countries capitals))
+
+(defun get_capital (tbl country)
+  (reduce #'(lambda (val1 val2) (or val1 val2))
+          (mapcar #'(lambda (row)
+                      (cond ((equal (car row) country) (cdr row))
+                            (t nil)))
+                  tbl)))
+
+(defun get_country (tbl capital)
+  (reduce #'(lambda (val1 val2) (or val1 val2))
+          (mapcar #'(lambda (row)
+                      (cond ((equal (cdr row) capital) (car row))
+                            (t nil)))
+                  tbl)))
+
+;;; rec
+(defun table_create (countries capitals)
+  (cond ((cdr countries)
+         (cons (cons (car countries) (car capitals))
+               (table_create (cdr countries) (cdr capitals))))
+        (t
+         (list (cons (car countries) (car capitals))))))
+
+(defun get_capital (tbl country)
+  (cond ((null tbl) nil)
+        ((equal (caar tbl) country) (cdar tbl))
+        (t (get_capital (cdr tbl) country))))
+
+(defun get_country (tbl capital)
+  (cond ((null tbl) nil)
+        ((equal (cdar tbl) capital) (caar tbl))
+        (t (get_country (cdr tbl) capital))))
+
+;;; test
+(setq countries '(Russia France Germany))
+(setq capitals '(Moscow Paris Berlin))
+(setq table (table_create countries capitals))
+
+(get_capital table 'Russia) ; MOSCOW
+(get_capital table 'Germany) ; BERLIN
+(get_capital table 'France) ; PARIS
+(get_capital table 'USA) ; NIL
+
+(get_country table 'Berlin) ; GERMANY
+(get_country table 'Moscow) ; RUSSIA
+(get_country table 'Paris) ; FRANCE
+(get_country table 'Washington) ; NIL
+\end{lstlisting}
+
+\section{Задание \No{}3}
+\textbf{Условие:}\\Напишите функцию, которая умножает на заданное число-аргумент все числа из заданного списка-аргумента, когда:
+\begin{enumerate}
+	\item все элементы списка - числа;
+	\item элементы списка -- любые объекты.
+\end{enumerate}
+
+В литинге 2.3 приведен текст решения дааной задачи на языке Common Lisp.
+
+\begin{lstlisting}[caption={Задание \No{}3}]
+;;; fun
+(defun mul1 (lst num)
+  (mapcar #'(lambda (item)
+              (* num item))
+          lst))
+
+(defun mul2 (lst num)
+  (mapcar #'(lambda (item)
+              (cond ((numberp item) (* num item))
+                    (t item)))
+          lst))
+
+;;; rec
+(defun mul1 (lst num)
+  (cond ((null lst) nil)
+        (t (cons (* (car lst) num) (mul1 (cdr lst) num)))))
+
+(defun mul2 (lst num)
+  (cond ((null lst) nil)
+        (t (cons (cond ((numberp (car lst)) (* (car lst) num))
+                       (t (car lst)))
+                 (mul2 (cdr lst) num)))))
+
+;;; test
+(setq nums '(4 21 5 43 31 8))
+(setq vals '(4 nil 5 43 (5 7) 8))
+
+(identity nums) ; (4 21 5 43 31 8)
+(mul1 nums 4) ; (16 84 20 172 124 32)
+
+(identity vals) ; (4 NIL 5 43 (5 7)
+(mul2 vals 4) ; (16 NIL 20 172 (5 7)
+\end{lstlisting}
+
+\section{Задание \No{}4}
+\textbf{Условие:}\\Напишите функцию, которая уменьшает на 10 все числа из списка-аргумента этой функции.
+
+В литинге 2.4 приведен текст решения дааной задачи на языке Common Lisp.
+
+\begin{lstlisting}[caption={Задание \No{}4}]
+;;; fun
+(defun sub10 (lst)
+  (mapcar #'(lambda (val)
+              (cond ((numberp val) (- val 10))
+                    (t val)))
+          lst))
+
+;;; rec
+(defun sub10 (lst)
+  (cond ((null lst) nil)
+        (t (cons (cond ((numberp (car lst)) (- (car lst) 10))
+                       (t (car lst)))
+                 (sub10 (cdr lst))))))
+
+;;; test
+(setq lst1 '(-2 4 1 2 4 nil 5 8 12 (555 666) 9 -99 10 7))
+(sub10 lst1) ; (-12 -6 -9 -8 -6 NIL -5 -2 2 (555 666) -1 -109 0 -3)
+\end{lstlisting}
+
+\section{Задание \No{}5}
+\textbf{Условие:}\\Написать функцию, которая возвращает первый аргумент списка-аргумента, который сам является непустым списком.
+
+В литинге 2.5 приведен текст решения дааной задачи на языке Common Lisp.
+
+\begin{lstlisting}[caption={Задание \No{}5}]
+;;; fun
+(defun find-no-empty (lst)
+  (reduce #'(lambda (val1 val2) (or val1 val2))
+          (mapcar #'(lambda (item)
+                      (cond ((listp item) item)
+                            (t nil)))
+                  lst)))
+
+;;; rec
+(defun find-no-empty (lst)
+  (cond ((null lst) nil)
+        ((and (not (null (car lst)))
+              (listp (car lst))) (car lst))
+        (t (find-no-empty (cdr lst)))))
+
+;;; test
+(find-no-empty '(1 23 nil -6 Word (1 2 3) () 66 (4 5 6))) ; (1 2 3)
+(find-no-empty '((3 4))) ; (3 4)
+(find-no-empty '(1 2)) ; nil
+(find-no-empty  '()) ; nil
+\end{lstlisting}
+
+\section{Задание \No{}6}
+\textbf{Условие:}\\Написать функцию, которая выбирает из заданного списка только те числа, которые больше 1 и меньше 10.
+
+В литинге 2.6 приведен текст решения дааной задачи на языке Common Lisp.
+
+\begin{lstlisting}[caption={Задание \No{}6}]
+;;; fun
+(defun filter (predicate lst)
+  (reverse (reduce #'(lambda (state item)
+                       (cond ((funcall predicate item) (cons item state))
+                             (t state)))
+                   (cons nil lst))))
+
+;;; rec
+(defun filter (predicate lst)
+  (cond ((null lst) nil)
+        (t (cond ((funcall predicate (car lst))
+                  (cons (car lst) (filter predicate (cdr lst))))
+                 (t (filter predicate (cdr lst)))))))
+
+;;; common
+(defun interval-filter (lst lo hi)
+  (filter #'(lambda (item)
+              (cond ((numberp item) (or (and (> item lo) (< item hi))
+                                        (and (> item hi) (< item lo))))
+                    (t nil)))
+          lst))
+
+;;; test
+(setq lst1 '(-2 4 1 2 4 nil 5 8 12 (555 666) 9 -99 10 7))
+
+(interval-filter lst1 1 10) ; (4 2 4 5 8 9 7)
+(interval-filter lst1 10 1) ; (4 2 4 5 8 9 7)
+(interval-filter lst1 100 1000) ; NIL
+(interval-filter lst1 1 1) ; NIL
+\end{lstlisting}
+
+\section{Задание \No{}7}
+\textbf{Условие:}\\Написать функцию, вычисляющую декартово произведение двух своих списков-аргументов.
+
+В литинге 2.7 приведен текст решения дааной задачи на языке Common Lisp.
+
+\begin{lstlisting}[caption={Задание \No{}7}]
+;;; fun
+(defun cart-product (l1 l2)
+  (mapcan #'(lambda (e1)
+              (mapcar #'(lambda (e2) (list e1 e2))
+                      l2))
+          l1))
+
+;;; rec
+(defun help1 (e1 l2)
+  (cond ((null l2) nil)
+        (t (cons (list e1 (car l2))
+                 (help1 e1 (cdr l2))))))
+
+(defun cart-product (l1 l2)
+  (cond ((null l1) nil)
+        (t (nconc (help1 (car l1) l2)
+                  (cart-product (cdr l1) l2)))))
+
+;;; test
+(cart-product nil '(3 4)) ; NIL
+(cart-product '(1 2) nil) ; NIL
+(cart-product '(buy sell) '(car cycle))
+; ((BUY CAR) (BUY CYCLE) (SELL CAR) (SELL CYCLE))
+\end{lstlisting}
+
+\section{Задание \No{}8}
+\textbf{Условие:}\\Почему так реализовано reduce, в чем причина?\\(reduce #*+0) ->\\(reduce #*+ ()) -> 0
+
+Этот текст не компилируется. Возможно, вместо него подразумевался текст, приведенный в листинге 2.8.
+\begin{lstlisting}[caption={Задание \No{}8}]
+(reduce #'+ nil) ; 0
+(reduce #'* nil) ; 1
+\end{lstlisting}
+
+В данном случае, результат первой строчки совпадает с результатом вычисления \textbf{(+)}, а второй - с результатом вычисления \textbf{(*)}, что очевидно, так как список аргументов в обоих случаях пуст (равен \textbf{nil}).
+
+Такое поведение функции reduce приведёт к ошибке при использовании в качестве функционального объекта функции, не вычисляющейся при пустом списке аргументов.
+
+Тем не менее, функция reduce имеет особенность: если используемый список аргументов состоит только из одного элемента, то в результате вычисления функции reduce будет получено значение именно этого элемента. Данный нюанс можно объяснить тем, что от функции reduce ожидается, что при использовании функции от двух аргументов в качестве функционального объекта и списка параметров, содержащего один или более элемент, она должна вычисляться без ошибок времени выполнения.
+
