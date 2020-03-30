@@ -34,7 +34,7 @@
        (help2 l1 l2)))
 
 ;;; тестирование
-(set-equal '(1 2 3) '(1 3 2))
-(set-equal '(1 2 3) '(1 5 2 3))
-(set-equal '(1 5 2 3) '(1 2 3))
+(set-equal '(1 2 3) '(1 3 2)) ; T
+(set-equal '(1 2 3) '(1 5 2 3)) ; NIL
+(set-equal '(1 5 2 3) '(1 2 3)) ; NIL
 

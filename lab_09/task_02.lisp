@@ -44,13 +44,13 @@
 (identity capitals)
 (identity table)
 
-(get_capital table 'Russia)
-(get_capital table 'Germany)
-(get_capital table 'France)
-(get_capital table 'USA)
+(get_capital table 'Russia) ; Moscow
+(get_capital table 'Germany) ; Berlin
+(get_capital table 'France) ; Paris
+(get_capital table 'USA) ; Nil
 
-(get_country table 'Berlin)
-(get_country table 'Moscow)
-(get_country table 'Paris)
-(get_country table 'Washington)
+(get_country table 'Berlin) ; Germany
+(get_country table 'Moscow) ; Russia
+(get_country table 'Paris) ; France
+(get_country table 'Washington) ; Nil
 
