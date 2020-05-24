@@ -22,10 +22,12 @@
 
 Пример факта из программы приведён в листинге~\ref{lst:exfact}.
 \begin{lstlisting}[caption={Пример факта},label=lst:exfact]
+phonebook(petrov, 74400297, address(moscow, lenina, 4, 2)).
 \end{lstlisting}
 
 Пример правила из программы приведён в листинге~\ref{lst:exrule}.
 \begin{lstlisting}[caption={Пример правила},label=lst:exrule]
+search(Phonenum, Carbrand) :- search(Phonenum, _, Carbrand, _).
 \end{lstlisting}
 
 Если составные термы, факты, правила и вопросы не содержат переменных, то они называются основными. Составные термы, факты, правила и вопросы в момент фиксации в программе могут содержать переменные, тогда они называются неосновными
