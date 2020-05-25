@@ -122,7 +122,7 @@ goal
     \hline
     \textnumero{} шага & Сравниваемые термы; результат; подстановка (если есть)  & Дальнейшие действия: прямой ход или откат \\
     \hline
-        1 & search(79345669, Lastname, Carbrand, Price) и search(Phonenum, Lastname, Carbrand, Price) совпадают по имени и списку аргументов $\Rightarrow$ происходит унификация:
+        1 & search(79345669, Lastname, Carbrand, Price) и search(Phonenum, Lastname, Carbrand, Price) совпадают по имени и размерности списка аргументов $\Rightarrow$ происходит унификация:
         \begin{enumerate}[label=\arabic*)]
 			\item переменная Phonenum унифицируется с константой 79345669 , т.е. конкретизируются её значением;
 			\item переменная Lastname унифицируется с переменной Lastname, т.е. остаётся неконкретизированной;
@@ -233,23 +233,109 @@ goal
 
 Рассмотрим подробнее поиск ответа на вопрос из листинга~\ref{lst:bex2}. Описание этого процесса приведено в таблице~\ref{tbl:ex2}.
 \renewcommand{\arraystretch}{1.75}
-\begin{table}[H]
-    \centering
-    \footnotesize
-    \begin{longtable}{|c|m{.4625\textwidth}|m{.3625\textwidth}|}
-    \caption{Поиск решения в примере \textnumero}\label{tbl:ex2} \\
+\footnotesize
+\begin{longtable}{|c|p{.4625\textwidth}|p{.3625\textwidth}|}
+\caption{Поиск решения в примере \textnumero2}\label{tbl:ex2} \\
     \hline
     \textnumero{} шага &
         Сравниваемые термы; результат; подстановка (если есть) &
         Дальнейшие действия: прямой ход или откат \\
     \hline
     1 &
-\begin{enumerate}[label=\arabic*)]
-    \item
-\end{enumerate} &
-         \\ \hline
+    search(79345669, Carbrand) и search(Phonenum, Carbrand) совпадают по имени и размерности списка аргументов $\Rightarrow$ происходит унификация:
+    \begin{enumerate}[label=\arabic*)]
+        \item переменная Phonenum конкретизируется значением 79345669;
+        \item Carbrand и Carbrand конкретизируются.
+    \end{enumerate}
+    Результат~--- search(79345669, Carbrand). &
+    В стек откладывается терм search(79345669, Carbrand).
+
+    Прямой ход: на резольвенту попадает терм, из которого состоит тело отложенного правила,~--- search(Phonenum, \_, Carbrand, \_). \\ \hline
+
+    2 & search(79345669, \_, Carbrand, \_) и search(Phonenum, Lastname, Carbrand, Price) совпадают по имени и размерности списка аргументов $\Rightarrow$ происходит унификация:
+    \begin{enumerate}[label=\arabic*)]
+        \item Phonenum конкретизируется значением 79345669;
+        \item Lastname унифицируется с анонимной переменной;
+        \item Carbrand унифицируется с Carbrand;
+        \item Price унифицируется с анонимной переменной.
+    \end{enumerate}
+    Результат~--- search(79345669, \_, Carbrand, \_). &
+    В стек откладывается терм search(79345669, \_, Carbrand, \_).
+
+    Прямой ход: на резольвенту попадают термы, из которых состоит тело правила search(Phonenum, Lastname, Carbrand, Price).
+
+    На вершине стека вопросов находится подцель phonebook(Lastname, Phonenum, \_). \\ \hline
+
+        3 & phonebook(Lastname, Phonenum, \_) и phonebook(petrov, 74400297, address(moscow,    lenina,       4,  2)) унифицируются:
+        \begin{enumerate}[label=\arabic*)]
+            \item Lastname конкретизируется значением petrov;
+            \item конкретизированная значением 79345669 переменная Phonenum не унифицируются с константой 74400297, так как их значения не совпадают.
+        \end{enumerate}
+        Унификация не выполняется. & Прямой ход. \\ \hline
+
+        4 & phonebook(Lastname, Phonenum, \_) и phonebook(igorev, 77270935, address(moscow,    marksa,       3,  5)) не унифицируются, потому что значение конкретизированной переменной Phonenum и константы 77270935 не совпадают. & Прямой ход. \\ \hline
+
+        5 & phonebook(Lastname, Phonenum, \_) и phonebook(ivanov, 79345669, address(moscow,    pushkinskaya, 11, 1)) унифицируются:
+        \begin{enumerate}[label=\arabic*)]
+            \item Lastname конкретизируется значением константы ivanov;
+            \item конкретизированная переменная Phonenum унифицируется с константой 79345669, так как их значения совпадают;
+            \item анонимная переменная унифицируется с константой address(\dots).
+        \end{enumerate}
+        Результат~--- phonebook(igorev, 79345669, \_, 3,  5)). &
+        В стек откладывается терм  phonebook(Lastname, Phonenum, \_).
+
+        Прямой ход: на вершине стека вопросов находится вторая подцель~--- car(Lastname, Carbrand, \_, Price). \\ \hline
+
+        6 & car(Lastname, Carbrand, \_, Price) и car(petrov, bugatti, red,    2400000) унифицируются:
+        \begin{enumerate}[label=\arabic*)]
+            \item конкретизированная значением ivanov переменная Lastname не унифицируется с константой petrov.
+        \end{enumerate}
+          Унификация не выполняется. &
+          Прямой ход. \\ \hline
+
+        7 & car(Lastname, Carbrand, \_, Price) и car(petrov, ferrari, red,    55000) унифицируются:
+        \begin{enumerate}[label=\arabic*)]
+            \item конкретизированная значением ivanov переменная Lastname не унифицируется с константой petrov.
+        \end{enumerate}
+          Унификация не выполняется. &
+          Прямой ход. \\ \hline
+
+        8 & car(Lastname, Carbrand, \_, Price) и car(ivanov, ford, pink, 25000) унифицируются:
+        \begin{enumerate}[label=\arabic*)]
+            \item конкретизированная значением ivanov переменная Lastname унифицируется с константой ivanov.
+            \item Carbrand конкретизируется значением константы ford;
+            \item анонимная переменная унифицируется с константой pink;
+            \item Price конкретизируется значением константы 25000.
+        \end{enumerate}
+        Результат~--- car(ivanov, ford, \_, 25000). &
+
+        \textbf{Найдено первое решение: Carbrand = ford.}
+
+        В стек откладывается терм car(Lastname, Carbrand, \_, Price). Резольвента опустела.
+
+        Откат: отложенный терм восстанавливается. \\ \hline
+
+        9 & car(Lastname, Carbrand, \_, Price) не унифицируется с car(igorev, tesla,   purple, 44000) & Прямой ход. \\ \hline
+
+        10 & car(Lastname, Carbrand, \_, Price) не унифицируется с car(igorev, bmw,   green, 3700) & Прямой ход. \\ \hline
+
+        11 & car(Lastname, Carbrand, \_, Price) не унифицируется с car(igorev, lexus,   yellow, 14000) & Обход базы знаний завершен.
+
+        Откат: восстановление из стека терма phonebook(Lastname, Phonenum, \_). \\ \hline
+
+        12--16 & phonebook(Lastname, Phonenum, \_) больше не унифицируется ни с одним из оставшихся в базе знаний фактом или правилом. & Обход базы знаний завершен.
+
+        Откат: восстановление из стека цели search(79345669, \_, Carbrand, \_) и удаление из резольвенты её подцелей. \\ \hline
+
+        17 & search(79345669, Lastname, Carbrand, Price) больше не унифицируется ни с одним из оставшихся в базе знаний фактом или правилом. & Обход базы знаний завершен.
+
+        Откат: цель search(79345669, Carbrand) восстанавливается из стека, а её подцель покидает резольвенту.\\ \hline
+
+        18 & search(79345669, Carbrand) больше не унифицируется ни с одним из оставшихся в базе знаний фактом или правилом. & Обход базы знаний завершен. Цель search(79345669, Carbrand) покидает резольвенту.
+
+        Завершение поиска решений. Найдено 1 решение. \\ \hline
 \end{longtable}
-\end{table}
+\normalsize
 
 \subsection{Задание 2}
 В листингах~\ref{lst:2ex1},~\ref{lst:2ex2},~\ref{lst:2ex3} приведены цели, использующие предикат search(lastname, city, street, bankname, phonenum), а так же их решение.
@@ -279,23 +365,275 @@ goal
 \end{lstlisting}
 
 Рассмотрим подробнее поиск ответа на вопрос из листинга~\ref{lst:2ex2}. Описание этого процесса приведено в таблице~\ref{tbl:ex3}.
-\begin{table}[H]
-    \centering
-    \footnotesize
-    \begin{longtable}{|c|m{.4625\textwidth}|m{.3625\textwidth}|}
-    \caption{Поиск решения в примере \textnumero}\label{tbl:ex3} \\
+\footnotesize
+\begin{longtable}{|c|p{.4625\textwidth}|p{.3625\textwidth}|}
+    \caption{Поиск решения в примере \textnumero2}\label{tbl:ex3} \\
     \hline
     \textnumero{} шага &
         Сравниваемые термы; результат; подстановка (если есть) &
         Дальнейшие действия: прямой ход или откат \\
     \hline
     1 &
-\begin{enumerate}[label=\arabic*)]
-    \item
-\end{enumerate} &
-         \\ \hline
+    search(stasov, spb, Street, Bankname, Phonenum) и search(Lastname, City, Street, Bankname, Phonenum) совпадают по имени и размерности списка аргументов $\Rightarrow$ происходит унификация:
+    \begin{enumerate}[label=\arabic*)]
+        \item Lastname конкретизируется значением stasov;
+        \item City конкретизируется значением spb;
+        \item Street и  Street унифицируются;
+        \item Bankname и Bankname унификации;
+        \item Phonenum и Phonenum унифицируются.
+    \end{enumerate}
+    Результат~--- search(stasov, spb, Street, Bankname, Phonenum).
+    &
+    В стек откладывается терм search(stasov, spb, Street, Bankname, Phonenum).
+
+    Прямой ход: на резольвенту попадают термы, из которых состоит тело отложенного правила.
+
+    На вершине стека вопросов находится phonebook(Lastname, Phonenum, address(City, Street, \_, \_)).
+    \\ \hline
+
+    2 &
+    phonebook(Lastname, Phonenum, address(City, Street, \_, \_)) и
+    phonebook(petrov, 74400297,
+              address(moscow,    lenina,       4,  2))
+    унифицируются:
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname не унифицируется с константой petrov.
+    \end{enumerate}
+
+    Унификация не выполняется.
+      &
+    Прямой ход.
+    \\ \hline
+
+    3 &
+    phonebook(Lastname, Phonenum, address(City, Street, \_, \_)) и
+    phonebook(igorev, 77270935,
+              address(moscow,    marksa,       3,  5))
+    унифицируются:
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname не унифицируется с константой igorev.
+    \end{enumerate}
+
+    Унификация не выполняется.
+      &
+    Прямой ход.
+    \\ \hline
+
+    4 &
+    phonebook(Lastname, Phonenum, address(City, Street, \_, \_)) и
+    phonebook(ivanov, 79345669,
+              address(moscow,    pushkinskaya, 11, 1))
+    унифицируются:
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname не унифицируется с константой ivanov.
+    \end{enumerate}
+
+    Унификация не выполняется.
+      &
+    Прямой ход.
+    \\ \hline
+
+    5 &
+    phonebook(Lastname, Phonenum, address(City, Street, \_, \_)) и
+    phonebook(ivanov, 70244559,
+              address(spb,       lenina,       3,  5))
+    унифицируются:
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname не унифицируется с константой ivanov.
+    \end{enumerate}
+
+    Унификация не выполняется.
+      &
+    Прямой ход.
+    \\ \hline
+
+    6 &
+    phonebook(Lastname, Phonenum, address(City, Street, \_, \_)) и
+    phonebook(stasov, 74024456,
+              address(spb,       marksa,       4,  4))
+    унифицируются:
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname унифицируется с константой stasov;
+        \item Phonenum конкретизируется значением 74024456;
+        \item конкретизированная значением spb переменная City унифицируется с константой spb;
+        \item Street конкретизируется значением marksa;
+        \item анонимная переменная унифицируется с константой 4;
+        \item анонимная переменная унифицируется с константой 4.
+    \end{enumerate}
+
+    Результат~--- phonebook(stasov, 74024456, address(spb, marksa, \_, \_).
+      &
+    Терм phonebook(Lastname, Phonenum, address(City, Street, \_, \_)) откладывается в стек.
+
+    Прямой ход: на вершине стека вопросов находится depositor(Lastname, Bankname, \_, \_).
+    \\ \hline
+
+    7 &
+    depositor(Lastname, Bankname, \_, \_) и
+    depositor(petrov, agricole, 5, 52150322)
+    унифицируются:
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname не унифицируется с константой petrov.
+    \end{enumerate}
+
+    Унификация не выполняется.
+      &
+    Прямой ход.
+    \\ \hline
+
+    8 &
+    depositor(Lastname, Bankname, \_, \_) и
+    depositor(igorev, paribas,  4, 32242424)
+    унифицируются:
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname не унифицируется с константой igorev.
+    \end{enumerate}
+
+    Унификация не выполняется.
+      &
+    Прямой ход.
+    \\ \hline
+
+    9 &
+    depositor(Lastname, Bankname, \_, \_) и
+    depositor(ivanov, sberbank, 2, 242342142)
+    унифицируются:
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname не унифицируется с константой ivanov.
+    \end{enumerate}
+
+    Унификация не выполняется.
+      &
+    Прямой ход.
+    \\ \hline
+
+    10 &
+    depositor(Lastname, Bankname, \_, \_) и
+    depositor(ivanov, sberbank, 6, 442423123)
+    унифицируются:
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname не унифицируется с константой ivanov.
+    \end{enumerate}
+
+    Унификация не выполняется.
+      &
+    Прямой ход.
+    \\ \hline
+
+    11 &
+    depositor(Lastname, Bankname, \_, \_) и
+    унифицируются:
+    depositor(stasov, sberbank, 1, 423424233)
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname унифицируется с константой stasov;
+        \item Bankname конкретизируется значением sberbank;
+        \item анонимная переменная унифицируется с константой 1;
+        \item анонимная переменная унифицируется с константой 423424233.
+    \end{enumerate}
+
+    Результат~--- depositor(stasov, sberbank, \_, \_).
+      &
+    \textbf{Найдено первое решение: Street = marksa, Bankname = sberbank, Phonenum = 74024456.}
+
+    В стек откладывается терм depositor(Lastname, Bankname, \_, \_). Резольвента опустела.
+
+    Откат: из стека восстанавливается depositor(Lastname, Bankname, \_, \_).
+    \\ \hline
+
+    12 &
+    depositor(Lastname, Bankname, \_, \_) и
+    depositor(petrov, agricole, 6, 42421234)
+    унифицируются:
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname не унифицируется с константой petrov.
+    \end{enumerate}
+
+    Унификация не выполняется.
+      &
+    Прямой ход.
+    \\ \hline
+
+    13 &
+    depositor(Lastname, Bankname, \_, \_) и
+    depositor(igorev, paribas,  3, 41424214)
+    унифицируются:
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname не унифицируется с константой igorev.
+    \end{enumerate}
+
+    Унификация не выполняется.
+      &
+    Прямой ход.
+    \\ \hline
+
+    14 &
+    depositor(Lastname, Bankname, \_, \_) и
+    depositor(igorev, sberbank, 8, 421342352)
+    унифицируются:
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname не унифицируется с константой igorev.
+    \end{enumerate}
+
+    Унификация не выполняется.
+      &
+    Обход базы знаний завершен.
+
+    Откат: восстановление из стека терма phonebook(Lastname, Phonenum, address(City, Street, \_, \_).
+    \\ \hline
+
+    15 &
+    phonebook(Lastname, Phonenum, address(City, Street, \_, \_)) и
+    phonebook(petrov, 78771841,
+              address(ekb,       lenina,       7,  9))
+    унифицируются:
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname не унифицируется с константой petrov.
+    \end{enumerate}
+
+    Унификация не выполняется.
+      &
+    Прямой ход.
+    \\ \hline
+
+    16 &
+    phonebook(Lastname, Phonenum, address(City, Street, \_, \_)) и
+    phonebook(igorev, 73148253,
+              address(ekb,       marksa,       6,  8))
+    унифицируются:
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname не унифицируется с константой igorev.
+    \end{enumerate}
+
+    Унификация не выполняется.
+      &
+    Прямой ход.
+    \\ \hline
+
+    17 &
+    phonebook(Lastname, Phonenum, address(City, Street, \_, \_)) и
+    phonebook(igorev, 73243243,
+              address(volgograd, lenina,       9,  9))
+    унифицируются:
+    \begin{enumerate}[label=\arabic*)]
+        \item конкретизированная значением stasov переменная Lastname не унифицируется с константой igorev.
+    \end{enumerate}
+
+    Унификация не выполняется.
+      &
+    Обход базы знаний завершен.
+
+    Откат: цель search(stasov, spb, Street, Bankname, Phonenum) восстанавливается из стека, а её подцели покидают резольвенту.
+    \\ \hline
+
+    18 &
+    Терм search(stasov, spb, Street, Bankname, Phonenum) больше не унифицируется ни с одним фактом или правилом.
+       &
+    Обход базы знаний завершен. Терм search(stasov, spb, Street, Bankname, Phonenum) покидает стек вопросов.
+
+    Завершение поиска решений. Найдено 1 решение.
+    \\ \hline
 \end{longtable}
-\end{table}
+\normalsize
 
 \renewcommand{\arraystretch}{1}
 
