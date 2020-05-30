@@ -1,0 +1,2185 @@
+\chapter{Практическая часть}
+В этом разделе приведено описание задания и его решения.
+
+\section{Условие}
+Составить программу, т.е. модель предметной области~--- базу знаний, объединив в ней информацию~--- знания:
+\begin{itemize}
+    \item \textbf{<<Телефонный справочник>>}: Фамилия, \textnumero{}тел, Адрес~--- структура (Город, Улица, \textnumero{}дома, \textnumero{}кв);
+    \item \textbf{<<Автомобили>>}:  Фамилия\_владельца, Марка, Цвет, Стоимость, и др.;
+    \item \textbf{<<Вкладчики банков>>}: Фамилия, Банк, счет, сумма, др.
+\end{itemize}
+
+Владелец может иметь несколько телефонов, автомобилей, вкладов (Факты). В разных городах есть однофамильцы, в одном городе – фамилия уникальна.
+
+Используя \textbf{конъюнктивное правило и простой вопрос}, обеспечить возможность поиска:
+
+По Марке и Цвету автомобиля найти Фамилию, Город, Телефон и Банки, в которых владелец автомобиля имеет вклады. Лишней информации не находить и не передавать!!!
+
+Владельцев может быть \textbf{несколько} (не более 3-х), \textbf{один и ни одного}.
+\begin{enumerate}
+    \item Для каждого из трех вариантов словесно подробно описать порядок формирования ответа (в виде таблицы). При этом, указать~--– отметить моменты очередного запуска алгоритма унификации и полный результат его работы. Обосновать следующий шаг работы системы. Выписать унификаторы~--– подстановки. Указать моменты, причины и результат отката, если он есть.
+
+    \item Для случая нескольких владельцев (2-х):\newline{}приведите примеры (таблицы) работы системы при разных порядках следования в БЗ процедур, и знаний в них: (<<Телефонный справочник>>, <<Автомобили>>, <<Вкладчики банков>>, или: <<Автомобили>>, <<Вкладчики банков>>, <<Телефонный справочник>>). Сделайте вывод: Одинаковы ли: множество работ и объем работ в разных случаях?
+
+    \item Оформите 2 таблицы, демонстрирующие порядок работы алгоритма унификации вопроса и подходящего заголовка правила (для двух случаев из пункта 2) и укажите результаты его работы: ответ и побочный эффект.
+\end{enumerate}
+
+\section{База знаний}
+
+В листинге~\ref{lst:knowledge} приведён текст базы знаний, удовлетворяющей условию задачи.
+\begin{lstlisting}[caption={База знаний},label={lst:knowledge}]
+domains
+  lastname, city, street, carbrand, color, bankname = symbol.
+  phonenum, housenum, apartnum, price, account, deposit = integer.
+  address = address(city, street, housenum, apartnum).
+predicates
+  phonebook(lastname, phonenum, address).
+  car(lastname, carbrand, color, price).
+  depositor(lastname, bankname, account, deposit).
+
+  search(carbrand, color, lastname, city, phonenum, bankname).
+clauses
+  phonebook(petrov, 74400297,
+            address(moscow,    lenina,       4,  2)).
+  phonebook(igorev, 77270935,
+            address(moscow,    marksa,       3,  5)).
+  phonebook(ivanov, 79345669,
+            address(moscow,    pushkinskaya, 11, 1)).
+  phonebook(stasov, 74024456,
+            address(spb,       marksa,       4,  4)).
+  phonebook(alkema, 73148253,
+            address(ekb,       marksa,       6,  8)).
+  phonebook(igorev, 73243243,
+            address(volgograd, lenina,       9,  9)).
+
+  car(petrov, ford,    pink,   24000).
+  car(petrov, ferrari, red,    55000).
+  car(ivanov, ford,    pink,   25000).
+  car(igorev, tesla,   purple, 44000).
+  car(stasov, bmw,     green,  3700).
+  car(alkema, lexus,   yellow, 14000).
+
+  depositor(petrov, agricole, 5, 52150322).
+  depositor(igorev, paribas,  4, 32242424).
+  depositor(ivanov, sberbank, 6, 442423123).
+  depositor(stasov, sberbank, 1, 423424233).
+  depositor(igorev, paribas,  3, 41424214).
+  depositor(igorev, sberbank, 8, 421342352).
+
+  search(Carbrand, Color, Lastname, City, Phonenum, Bankname) :-
+    car(Lastname, Carbrand, Color, _),
+    phonebook(Lastname, Phonenum, address(City, _, _, _)),
+    depositor(Lastname, Bankname, _, _).
+\end{lstlisting}
+
+\section{Задание \textnumero1}
+Рассмотрим примеры трёх целей, текст и решение которых приведены в листингах~\ref{lst:ex1},~\ref{lst:ex2},~\ref{lst:ex3}.
+
+\begin{lstlisting}[caption={Пример \textnumero1},label={lst:ex1}]
+goal
+  search(ford, pink, Lastname, City, Phonenum, Bankname).
+
+% Lastname=petrov, City=moscow, Phonenum=74400297, Bankname=agricole
+% Lastname=ivanov, City=moscow, Phonenum=79345669, Bankname=sberbank
+% 2 Solutions
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Пример \textnumero2},label={lst:ex2}]
+goal
+  search(bmw, green, Lastname, City, Phonenum, Bankname).
+
+% Lastname=stasov, City=spb, Phonenum=74024456, Bankname=sberbank
+% 1 Solution
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Пример \textnumero3},label={lst:ex3}]
+goal
+  search(lexus, yellow, Lastname, City, Phonenum, Bankname).
+
+% No Solutions
+\end{lstlisting}
+
+В таблицах~\ref{tbl:ex1},~\ref{tbl:ex2},~\ref{tbl:ex3} приведены подробные описания поиска решений целей из листингов~\ref{lst:ex1},~\ref{lst:ex2},~\ref{lst:ex3} соответственно.
+
+\renewcommand{\arraystretch}{1.75}
+\footnotesize
+\begin{longtable}{|c|p{.4625\textwidth}|p{.3625\textwidth}|}
+    \caption{Поиск решения в примере \textnumero1}\label{tbl:ex1} \\
+    \hline
+    \textnumero{} шага & Сравниваемые термы; результат; подстановка (если есть)  & Дальнейшие действия: прямой ход или откат \\
+    \hline
+
+    1
+                       &
+\textbf{Сравнение:} \newline
+    search(ford, pink, Lastname, City, Phonenum, Bankname)
+    \newline и \newline
+    search(Carbrand, Color, Lastname, City, Phonenum, Bankname).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация выполнена.\newline{}Carbrand=ford; Color=pink.
+                       &
+                       В стек откладывается\newline
+                       search(ford, pink, Lastname, City, Phonenum, Bankname).
+                       \newline
+
+                       \textbf{Прямой ход.}
+
+                       На резольвенту попадают:
+
+                       car(Lastname, Carbrand, Color, \_),
+
+                       phonebook(Lastname, Phonenum, address(City, \_, \_, \_)),
+
+                       depositor(Lastname, Bankname, \_, \_).
+                       \\ \hline
+
+    2
+                       &
+\textbf{Сравнение:} \newline
+    car(petrov, ford,    pink,   24000)
+    \newline и \newline
+    car(Lastname, ford, pink, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация выполнена.\newline{}
+    Lastname=petrov.
+                       &
+    В стек откладывается\newline
+    car(Lastname, ford, pink, \_).
+    \newline
+
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    3
+                       &
+\textbf{Сравнение:} \newline
+    phonebook(petrov, 74400297, address(moscow,    lenina,       4,  2))
+    \newline и \newline
+    phonebook(petrov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация выполнена.\newline{}
+    Phonenum=74400297, City=moscow.
+                       &
+    В стек откладывается\newline
+    phonebook(petrov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    4
+                       &
+\textbf{Сравнение:} \newline
+    depositor(petrov, agricole, 5, 52150322)
+    \newline и \newline
+    depositor(petrov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация выполнена.\newline{}
+    Bankname=agricole.
+                       &
+    \textbf{Получено первое решение:}\newline
+    Lastname=petrov, City=moscow, Phonenum=74400297, Bankname=agricole.
+    \newline
+
+    В стек откладывается\newline
+    depositor(petrov, Bankname, \_).
+    \newline
+
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    5
+                       &
+    Резольвента пуста.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    \textbf{Откат.}
+    \newline
+
+    Из стека восстанавливается терм \newline
+    depositor(petrov, Bankname, \_).
+                       \\ \hline
+
+    6
+                       &
+\textbf{Сравнение:} \newline
+    depositor(igorev, paribas,  4, 32242424)
+    \newline и \newline
+    depositor(petrov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    7
+                       &
+\textbf{Сравнение:} \newline
+    depositor(ivanov, sberbank, 6, 442423123)
+    \newline и \newline
+    depositor(petrov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    8
+                       &
+\textbf{Сравнение:} \newline
+    depositor(stasov, sberbank, 1, 423424233)
+    \newline и \newline
+    depositor(petrov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    9
+                       &
+\textbf{Сравнение:} \newline
+    depositor(igorev, paribas,  3, 41424214)
+    \newline и \newline
+    depositor(petrov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    10
+                       &
+\textbf{Сравнение:} \newline
+    depositor(igorev, sberbank, 8, 421342352)
+    \newline и \newline
+    depositor(petrov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    11
+                       &
+    Процедура исчерпана.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    \textbf{Откат.}
+    \newline
+
+    Из стека восстанавливается терм \newline
+    phonebook(petrov, Phonenum, address(City, \_, \_, \_)).
+                       \\ \hline
+
+    12
+                       &
+\textbf{Сравнение:} \newline
+    phonebook(igorev, 77270935,
+              address(moscow,    marksa,       3,  5)).
+    \newline и \newline
+    phonebook(petrov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    13
+                       &
+\textbf{Сравнение:} \newline
+    phonebook(ivanov, 79345669,
+              address(moscow,    pushkinskaya, 11, 1)).
+    \newline и \newline
+    phonebook(petrov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    14
+                       &
+\textbf{Сравнение:} \newline
+    phonebook(stasov, 74024456,
+              address(spb,       marksa,       4,  4)).
+    \newline и \newline
+    phonebook(petrov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    15
+                       &
+\textbf{Сравнение:} \newline
+    phonebook(alkema, 73148253,
+              address(ekb,       marksa,       6,  8)).
+    \newline и \newline
+    phonebook(petrov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    16
+                       &
+\textbf{Сравнение:} \newline
+    phonebook(igorev, 73243243,
+              address(volgograd, lenina,       9,  9)).
+    \newline и \newline
+    phonebook(petrov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    17
+                       &
+    Процедура исчерпана.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    \textbf{Откат.}
+    \newline
+
+    Из стека восстанавливается терм \newline
+    car(Lastname, ford, pink, \_).
+                       \\ \hline
+
+    18
+                       &
+\textbf{Сравнение:} \newline
+    car(petrov, ferrari, red,    55000)
+    \newline и \newline
+    car(Lastname, ford, pink, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    19
+                       &
+\textbf{Сравнение:} \newline
+    car(ivanov, ford,    pink,   25000)
+    \newline и \newline
+    car(Lastname, ford, pink, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация выполнена.\newline{}
+    Lastname=ivanov.
+                       &
+    В стек откладывается\newline
+    car(Lastname, ford, pink, \_).
+    \newline
+
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    20
+                       &
+\textbf{Сравнение:} \newline
+    phonebook(petrov, 74400297, address(moscow,    lenina,       4,  2))
+    \newline и \newline
+    phonebook(ivanov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    21
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(igorev, 77270935,
+            address(moscow,    marksa,       3,  5)).
+    \newline и \newline
+    phonebook(ivanov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    22
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(ivanov, 79345669,
+            address(moscow,    pushkinskaya, 11, 1)).
+    \newline и \newline
+    phonebook(ivanov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация выполнена.\newline{}
+    Phonenum=79345669, City=moscow.
+                       &
+    В стек откладывается\newline
+    phonebook(petrov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    23
+                       &
+\textbf{Сравнение:} \newline
+  depositor(petrov, agricole, 5, 52150322)
+    \newline и \newline
+    depositor(ivanov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    24
+                       &
+\textbf{Сравнение:} \newline
+  depositor(igorev, paribas,  4, 32242424)
+    \newline и \newline
+    depositor(ivanov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    25
+                       &
+\textbf{Сравнение:} \newline
+  depositor(ivanov, sberbank, 6, 442423123)
+    \newline и \newline
+    depositor(ivanov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация выполнена.\newline{}
+    Bankname=sberbank.
+                       &
+    \textbf{Получено второе решение:}\newline
+    Lastname=ivanov, City=moscow, Phonenum=79345669, Bankname=sberbank.
+    \newline
+
+    В стек откладывается\newline
+    depositor(ivanov, Bankname, \_).
+    \newline
+
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    26
+                       &
+    Резольвента пуста.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    \textbf{Откат.}
+    \newline
+
+    Из стека восстанавливается терм \newline
+    depositor(ivanov, Bankname, \_).
+                       \\ \hline
+
+    27
+                       &
+\textbf{Сравнение:} \newline
+  depositor(stasov, sberbank, 1, 423424233)
+    \newline и \newline
+    depositor(ivanov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    28
+                       &
+\textbf{Сравнение:} \newline
+  depositor(igorev, paribas,  3, 41424214)
+    \newline и \newline
+    depositor(ivanov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    28
+                       &
+\textbf{Сравнение:} \newline
+  depositor(igorev, sberbank, 8, 421342352)
+    \newline и \newline
+    depositor(ivanov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    29
+                       &
+    Процедура исчерпана.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    \textbf{Откат.}
+    \newline
+
+    Из стека восстанавливается терм \newline
+    phonebook(ivanov, Phonenum, address(City, \_, \_, \_)).
+                       \\ \hline
+
+    30
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(stasov, 74024456,
+            address(spb,       marksa,       4,  4))
+    \newline и \newline
+    phonebook(ivanov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    31
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(alkema, 73148253,
+            address(ekb,       marksa,       6,  8))
+    \newline и \newline
+    phonebook(ivanov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    32
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(igorev, 73243243,
+            address(volgograd, lenina,       9,  9))
+    \newline и \newline
+    phonebook(ivanov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    33
+                       &
+    Процедура исчерпана.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    \textbf{Откат.}
+    \newline
+
+    Из стека восстанавливается терм \newline
+    car(Lastname, ford, pink, \_).
+                       \\ \hline
+
+    34
+                       &
+\textbf{Сравнение:} \newline
+  car(igorev, tesla,   purple, 44000)
+    \newline и \newline
+    car(Lastname, ford, pink, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    35
+                       &
+\textbf{Сравнение:} \newline
+  car(stasov, bmw,     green,  3700)
+    \newline и \newline
+    car(Lastname, ford, pink, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    36
+                       &
+\textbf{Сравнение:} \newline
+  car(alkema, lexus,   yellow, 14000)
+    \newline и \newline
+    car(Lastname, ford, pink, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    37
+                       &
+    Процедура исчерпана.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    \textbf{Откат.}
+    \newline
+
+    Из стека восстанавливается терм \newline
+    search(ford, pink, Lastname, City, Phonenum, Bankname).
+    \newline
+
+    Резольвенту покидают:
+
+    car(Lastname, Carbrand, Color, \_),
+
+    phonebook(Lastname, Phonenum, address(City, \_, \_, \_)),
+
+    depositor(Lastname, Bankname, \_, \_).
+                       \\ \hline
+
+    38
+                       &
+    Процедура исчерпана.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    Резольвенту покидает
+
+    search(ford, pink, Lastname, City, Phonenum, Bankname).
+    \newline
+
+    Резольвента и стек пусты. Поиск решений завершён.
+
+    \textbf{Найдено 2 решения.}
+                       \\ \hline
+\end{longtable}
+\normalsize
+
+\footnotesize
+\begin{longtable}{|c|p{.4625\textwidth}|p{.3625\textwidth}|}
+    \caption{Поиск решения в примере \textnumero2}\label{tbl:ex2} \\
+    \hline
+    \textnumero{} шага & Сравниваемые термы; результат; подстановка (если есть)  & Дальнейшие действия: прямой ход или откат \\
+    \hline
+
+    1
+                       &
+\textbf{Сравнение:} \newline
+  search(bmw, green, Lastname, City, Phonenum, Bankname)
+    \newline и \newline
+    search(Carbrand, Color, Lastname, City, Phonenum, Bankname).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация выполнена.\newline{}Carbrand=bmw; Color=green.
+                       &
+    В стек откладывается\newline
+  search(bmw, green, Lastname, City, Phonenum, Bankname).
+    \newline
+
+    \textbf{Прямой ход.}
+
+    На резольвенту попадают:
+
+    car(Lastname, Carbrand, Color, \_),
+
+    phonebook(Lastname, Phonenum, address(City, \_, \_, \_)),
+
+    depositor(Lastname, Bankname, \_, \_).
+                       \\ \hline
+
+    2
+                       &
+    \textbf{Сравнение:} \newline
+  car(petrov, ford,    pink,   24000)
+    \newline и \newline
+    car(Lastname, bmw, green, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    3
+                       &
+    \textbf{Сравнение:} \newline
+  car(petrov, ferrari, red,    55000)
+    \newline и \newline
+    car(Lastname, bmw, green, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    4
+                       &
+    \textbf{Сравнение:} \newline
+  car(ivanov, ford,    pink,   25000)
+    \newline и \newline
+    car(Lastname, bmw, green, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    5
+                       &
+    \textbf{Сравнение:} \newline
+  car(igorev, tesla,   purple, 44000)
+    \newline и \newline
+    car(Lastname, bmw, green, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    6
+                       &
+\textbf{Сравнение:} \newline
+  car(stasov, bmw,     green,  3700)
+    \newline и \newline
+    car(Lastname, bmw, green, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация выполнена.\newline{}
+    Lastname=stasov.
+                       &
+    В стек откладывается\newline
+    car(Lastname, bmw, green, \_).
+    \newline
+
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    7
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(petrov, 74400297,
+            address(moscow,    lenina,       4,  2))
+    \newline и \newline
+    phonebook(stasov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    8
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(igorev, 77270935,
+            address(moscow,    marksa,       3,  5))
+    \newline и \newline
+    phonebook(stasov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    9
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(ivanov, 79345669,
+            address(moscow,    pushkinskaya, 11, 1))
+    \newline и \newline
+    phonebook(stasov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    10
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(stasov, 74024456,
+            address(spb,       marksa,       4,  4))
+    \newline и \newline
+    phonebook(stasov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация выполнена.\newline{}
+    Phonenum=74024456, City=spb.
+                       &
+    В стек откладывается\newline
+    phonebook(stasov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    11
+                       &
+\textbf{Сравнение:} \newline
+  depositor(petrov, agricole, 5, 52150322)
+    \newline и \newline
+    depositor(stasov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    12
+                       &
+\textbf{Сравнение:} \newline
+  depositor(igorev, paribas,  4, 32242424)
+    \newline и \newline
+    depositor(stasov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    13
+                       &
+\textbf{Сравнение:} \newline
+  depositor(ivanov, sberbank, 6, 442423123)
+    \newline и \newline
+    depositor(stasov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    14
+                       &
+\textbf{Сравнение:} \newline
+  depositor(stasov, sberbank, 1, 423424233)
+    \newline и \newline
+    depositor(stasov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация выполнена.\newline{}
+    Bankname=sberbank.
+                       &
+    \textbf{Получено первое решение:}\newline
+    Lastname=sberbank, City=spb, Phonenum=74024456, Bankname=sberbank.
+    \newline
+
+    В стек откладывается\newline
+    depositor(stasov, Bankname, \_).
+    \newline
+
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    15
+                       &
+    Резольвента пуста.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    \textbf{Откат.}
+    \newline
+
+    Из стека восстанавливается терм \newline
+    depositor(stasov, Bankname, \_).
+                       \\ \hline
+
+    16
+                       &
+\textbf{Сравнение:} \newline
+  depositor(igorev, paribas,  3, 41424214)
+    \newline и \newline
+    depositor(stasov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    17
+                       &
+\textbf{Сравнение:} \newline
+  depositor(igorev, sberbank, 8, 421342352)
+    \newline и \newline
+    depositor(stasov, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    18
+                       &
+    Процедура исчерпана.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    \textbf{Откат.}
+    \newline
+
+    Из стека восстанавливается терм \newline
+    phonebook(stasov, Phonenum, address(City, \_, \_, \_)).
+                       \\ \hline
+
+    19
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(alkema, 73148253,
+            address(ekb,       marksa,       6,  8))
+    \newline и \newline
+    phonebook(stasov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    20
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(igorev, 73243243,
+            address(volgograd, lenina,       9,  9))
+    \newline и \newline
+    phonebook(stasov, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    21
+                       &
+    Процедура исчерпана.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    \textbf{Откат.}
+    \newline
+
+    Из стека восстанавливается терм \newline
+    car(Lastname, ford, pink, \_).
+                       \\ \hline
+
+    22
+                       &
+\textbf{Сравнение:} \newline
+  car(alkema, lexus,   yellow, 14000)
+    \newline и \newline
+    car(Lastname, ford, pink, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    23
+                       &
+    Процедура исчерпана.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    \textbf{Откат.}
+    \newline
+
+    Из стека восстанавливается терм \newline
+  search(bmw, green, Lastname, City, Phonenum, Bankname).
+    \newline
+
+    Резольвенту покидают:
+
+    car(Lastname, Carbrand, Color, \_),
+
+    phonebook(Lastname, Phonenum, address(City, \_, \_, \_)),
+
+    depositor(Lastname, Bankname, \_, \_).
+                       \\ \hline
+
+    24
+                       &
+    Процедура исчерпана.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    Резольвенту покидает
+
+    search(bmw, green, Lastname, City, Phonenum, Bankname).
+    \newline
+
+    Резольвента и стек пусты. Поиск решений завершён.
+
+    \textbf{Найдено 1 решение.}
+                       \\ \hline
+\end{longtable}
+\normalsize
+
+\footnotesize
+\begin{longtable}{|c|p{.4625\textwidth}|p{.3625\textwidth}|}
+    \caption{Поиск решения в примере \textnumero3}\label{tbl:ex3} \\
+    \hline
+    \textnumero{} шага & Сравниваемые термы; результат; подстановка (если есть)  & Дальнейшие действия: прямой ход или откат \\
+    \hline
+
+    1
+                       &
+\textbf{Сравнение:} \newline
+  search(lexus, yellow, Lastname, City, Phonenum, Bankname)
+    \newline и \newline
+    search(Carbrand, Color, Lastname, City, Phonenum, Bankname).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация выполнена.\newline{}Carbrand=lexus; Color=yellow.
+                       &
+    В стек откладывается\newline
+  search(lexus, yellow, Lastname, City, Phonenum, Bankname).
+    \newline
+
+    \textbf{Прямой ход.}
+
+    На резольвенту попадают:
+
+    car(Lastname, Carbrand, Color, \_),
+
+    phonebook(Lastname, Phonenum, address(City, \_, \_, \_)),
+
+    depositor(Lastname, Bankname, \_, \_).
+                       \\ \hline
+
+    2
+                       &
+    \textbf{Сравнение:} \newline
+  car(petrov, ford,    pink,   24000)
+    \newline и \newline
+    car(Lastname, lexus, yellow, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    3
+                       &
+    \textbf{Сравнение:} \newline
+  car(petrov, ferrari, red,    55000)
+    \newline и \newline
+    car(Lastname, lexus, yellow, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    4
+                       &
+    \textbf{Сравнение:} \newline
+  car(ivanov, ford,    pink,   25000)
+    \newline и \newline
+    car(Lastname, lexus, yellow, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    5
+                       &
+    \textbf{Сравнение:} \newline
+  car(igorev, tesla,   purple, 44000)
+    \newline и \newline
+    car(Lastname, lexus, yellow, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    6
+                       &
+    \textbf{Сравнение:} \newline
+  car(stasov, bmw,     green,  3700)
+    \newline и \newline
+    car(Lastname, lexus, yellow, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    7
+                       &
+\textbf{Сравнение:} \newline
+  car(alkema, lexus,   yellow, 14000).
+    \newline и \newline
+    car(Lastname, lexus, yellow, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация выполнена.\newline{}
+    Lastname=alkema.
+                       &
+    В стек откладывается\newline
+    car(Lastname, lexus, yellow, \_).
+    \newline
+
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    8
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(petrov, 74400297,
+            address(moscow,    lenina,       4,  2))
+    \newline и \newline
+    phonebook(alkema, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    9
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(igorev, 77270935,
+            address(moscow,    marksa,       3,  5))
+    \newline и \newline
+    phonebook(alkema, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    10
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(ivanov, 79345669,
+            address(moscow,    pushkinskaya, 11, 1))
+    \newline и \newline
+    phonebook(alkema, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    11
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(stasov, 74024456,
+            address(spb,       marksa,       4,  4))
+    \newline и \newline
+    phonebook(alkema, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    12
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(alkema, 73148253,
+            address(ekb,       marksa,       6,  8))
+    \newline и \newline
+    phonebook(alkema, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация выполнена.\newline{}
+    Phonenum=73148253, City=ekb.
+                       &
+    В стек откладывается\newline
+    phonebook(alkema, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    13
+                       &
+\textbf{Сравнение:} \newline
+  depositor(petrov, agricole, 5, 52150322)
+    \newline и \newline
+    depositor(alkema, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    14
+                       &
+\textbf{Сравнение:} \newline
+  depositor(igorev, paribas,  4, 32242424)
+    \newline и \newline
+    depositor(alkema, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    15
+                       &
+\textbf{Сравнение:} \newline
+  depositor(ivanov, sberbank, 6, 442423123)
+    \newline и \newline
+    depositor(alkema, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    16
+                       &
+\textbf{Сравнение:} \newline
+  depositor(stasov, sberbank, 1, 423424233)
+    \newline и \newline
+    depositor(alkema, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    17
+                       &
+\textbf{Сравнение:} \newline
+  depositor(igorev, paribas,  3, 41424214).
+    \newline и \newline
+    depositor(alkema, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    18
+                       &
+\textbf{Сравнение:} \newline
+  depositor(igorev, sberbank, 8, 421342352)
+    \newline и \newline
+    depositor(alkema, Bankname, \_).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    19
+                       &
+    Процедура исчерпана.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    \textbf{Откат.}
+    \newline
+
+    Из стека восстанавливается терм \newline
+    phonebook(alkema, Phonenum, address(City, \_, \_, \_)).
+                       \\ \hline
+
+    20
+                       &
+\textbf{Сравнение:} \newline
+  phonebook(igorev, 73243243,
+            address(volgograd, lenina,       9,  9))
+    \newline и \newline
+    phonebook(alkema, Phonenum, address(City, \_, \_, \_)).
+    \newline
+
+    \textbf{Результат:} \newline
+    Унификация не выполнена.
+                       &
+    \textbf{Прямой ход.}
+                       \\ \hline
+
+    21
+                       &
+    Процедура исчерпана.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    \textbf{Откат.}
+    \newline
+
+    Из стека восстанавливается терм \newline
+    car(Lastname, lexus, yellow, \_).
+                       \\ \hline
+
+    22
+                       &
+    Процедура исчерпана.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    \textbf{Откат.}
+    \newline
+
+    Из стека восстанавливается терм \newline
+  search(lexus, yellow, Lastname, City, Phonenum, Bankname).
+    \newline
+
+    Резольвенту покидают:
+
+    car(Lastname, Carbrand, Color, \_),
+
+    phonebook(Lastname, Phonenum, address(City, \_, \_, \_)),
+
+    depositor(Lastname, Bankname, \_, \_).
+                       \\ \hline
+
+    23
+                       &
+    Процедура исчерпана.
+    \newline
+
+    \textbf{Результат:} \newline
+    Тупик, унификация провалена.
+                       &
+    Резольвенту покидает
+
+    search(lexus, yellow, Lastname, City, Phonenum, Bankname).
+    \newline
+
+    Резольвента и стек пусты. Поиск решений завершён.
+
+    \textbf{Найдено 0 решений.}
+                       \\ \hline
+\end{longtable}
+\normalsize
+
+\renewcommand{\arraystretch}{1}
+
+\section{Задание \textnumero2}
+
+В программе на Prolog база знаний формируется из правил. Причём правила, определяющие одну процедуру, располагаются вместе. Prolog проводит унификацию термов, составляющих тело правила, в порядке их следования при определении. Обход базы знаний начинается с поиска подходящей процедуры и заканчивается при рассмотрении её последнего правила. Следовательно объём работ не зависит от порядка расположения процедур в базе знаний. А порядок найденных решений соответствует порядку расположенных в процедуре правил.
+
+\section{Задание \textnumero3}
+\footnotesize
+\begin{longtable}{|p{.0475\textwidth}|p{.22\textwidth}|p{.3\textwidth}|p{.06\textwidth}|p{.22\textwidth}|}
+    \caption{Подробное описание унификации цели и заголовка правила}\label{tbl:task3-1} \\
+    \hline
+    \textnumero{} шага & результирующая ячейка & рабочее поле & пункт алгоритма & стек \\
+    \hline
+
+0
+                       &
+
+                       &
+
+                       &
+1.
+                       &
+search(ford, pink, Lastname, City, Phonenum, Bankname)
+\newline = \newline
+search(Carbrand, Color, Lastname, City, Phonenum, Bankname)
+                       \\ \hline
+
+1
+                       &
+
+                       &
+search(ford, pink, Lastname, City, Phonenum, Bankname)
+\newline = \newline
+search(Carbrand, Color, Lastname, City, Phonenum, Bankname)
+
+\hfill\contour{black}{$\xrightarrow{\hspace{0.13\textwidth}}$}
+                       &
+е)
+                       &
+Carbrand=ford,
+
+Color=pink,
+
+Lastname=Lastname,
+
+City=City,
+
+Phonenum=Phonenum,
+
+Bankname=Bankname
+                       \\ \hline
+
+2
+                       &
+Carbrand=ford
+                       &
+Carbrand=ford
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+Color=pink,
+
+Lastname=Lastname,
+
+City=City,
+
+Phonenum=Phonenum,
+
+Bankname=Bankname
+                       \\ \hline
+
+3
+                       &
+Carbrand=ford,
+
+Color=pink
+                       &
+Color=pink
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+Lastname=Lastname,
+
+City=City,
+
+Phonenum=Phonenum,
+
+Bankname=Bankname
+                       \\ \hline
+
+4
+                       &
+Carbrand=ford,
+
+Color=pink
+
+Lastname=Lastname
+                       &
+Lastname=Lastname
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+City=City,
+
+Phonenum=Phonenum,
+
+Bankname=Bankname
+                       \\ \hline
+
+5
+                       &
+Carbrand=ford,
+
+Color=pink
+
+Lastname=Lastname,
+
+City=City
+                       &
+City=City
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+Phonenum=Phonenum,
+
+Bankname=Bankname
+                       \\ \hline
+
+6
+                       &
+Carbrand=ford,
+
+Color=pink
+
+Lastname=Lastname,
+
+City=City,
+
+Phonenum=Phonenum
+                       &
+Phonenum=Phonenum
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+Bankname=Bankname
+                       \\ \hline
+
+7
+                       &
+Carbrand=ford,
+
+Color=pink
+
+Lastname=Lastname,
+
+City=City,
+
+Phonenum=Phonenum,
+
+Bankname=Bankname
+                       &
+Bankname=Bankname
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+                       \\ \hline
+
+                       &
+\textbf{подстановка}
+                       &
+\multicolumn{3}{c|}{успех~--- переход к подцели}
+                       \\ \hline
+\end{longtable}
+\normalsize
+
+\footnotesize
+\begin{longtable}{|p{.0475\textwidth}|p{.22\textwidth}|p{.3\textwidth}|p{.06\textwidth}|p{.22\textwidth}|}
+    \caption{Подробное описание унификации цели и правила}\label{tbl:task3-2} \\
+    \hline
+    \textnumero{} шага & результирующая ячейка & рабочее поле & пункт алгоритма & стек \\
+    \hline
+
+0
+                       &
+
+                       &
+
+                       &
+1.
+                       &
+search(bmw, green, Lastname, City, Phonenum, Bankname)
+\newline = \newline
+search(Carbrand, Color, Lastname, City, Phonenum, Bankname)
+                       \\ \hline
+
+1
+                       &
+
+                       &
+search(bmw, green, Lastname, City, Phonenum, Bankname)
+\newline = \newline
+search(Carbrand, Color, Lastname, City, Phonenum, Bankname)
+
+\hfill\contour{black}{$\xrightarrow{\hspace{0.13\textwidth}}$}
+                       &
+е)
+                       &
+Carbrand=bmw,
+
+Color=green,
+
+Lastname=Lastname,
+
+City=City,
+
+Phonenum=Phonenum,
+
+Bankname=Bankname
+                       \\ \hline
+
+2
+                       &
+Carbrand=bmw
+                       &
+Carbrand=bmw
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+Color=green,
+
+Lastname=Lastname,
+
+City=City,
+
+Phonenum=Phonenum,
+
+Bankname=Bankname
+                       \\ \hline
+
+3
+                       &
+Carbrand=bmw,
+
+Color=green
+                       &
+Color=green
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+Lastname=Lastname,
+
+City=City,
+
+Phonenum=Phonenum,
+
+Bankname=Bankname
+                       \\ \hline
+
+4
+                       &
+Carbrand=bmw,
+
+Color=green,
+
+Lastname=Lastname
+                       &
+Lastname=Lastname
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+City=City,
+
+Phonenum=Phonenum,
+
+Bankname=Bankname
+                       \\ \hline
+
+5
+                       &
+Carbrand=bmw,
+
+Color=green,
+
+Lastname=Lastname,
+
+City=City
+                       &
+City=City
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+Phonenum=Phonenum,
+
+Bankname=Bankname
+                       \\ \hline
+
+6
+                       &
+Carbrand=bmw,
+
+Color=green,
+
+Lastname=Lastname,
+
+City=City,
+
+Phonenum=Phonenum
+                       &
+Phonenum=Phonenum
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+Bankname=Bankname
+                       \\ \hline
+
+7
+                       &
+Carbrand=bmw,
+
+Color=green,
+
+Lastname=Lastname,
+
+City=City,
+
+Phonenum=Phonenum,
+
+Bankname=Bankname
+                       &
+Bankname=Bankname
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+                       \\ \hline
+
+                       &
+\textbf{подстановка}
+                       &
+                       \multicolumn{3}{p{0.58\textwidth}|}{успех~--- переход к подцели\newline{}car(Lastname, Carbrand, Color, \_)}
+                       \\ \hline
+
+8
+                       &
+                       &
+                       &
+1.
+                       &
+car(Lastname, bmw, green, \_)
+\newline = \newline
+car(petrov, ford,    pink,   24000)
+                       \\ \hline
+
+9
+                       &
+                       &
+car(Lastname, bmw, green, \_)
+\newline = \newline
+car(petrov, ford,    pink,   24000)
+
+\hfill\contour{black}{$\xrightarrow{\hspace{0.13\textwidth}}$}
+                       &
+е)
+                       &
+Lastname=petrov,
+
+bmw=ford,
+
+green=pink
+                       \\ \hline
+
+10
+                       &
+Lastname=petrov
+                       &
+Lastname=petrov
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+bmw=ford,
+
+green=pink
+                       \\ \hline
+
+11
+                       &
+Lastname=petrov
+                       &
+bmw=ford
+                       &
+г)
+                       &
+green=pink
+                       \\ \hline
+
+                       &
+---
+                       &
+\multicolumn{3}{c|}{неудача~--- подбор следующего факта}
+                       \\ \hline
+
+\ldots
+                       &
+---
+                       &
+\multicolumn{3}{c|}{пропуск невыполненных унификаций}
+                       \\ \hline
+
+23
+                       &
+                       &
+                       &
+1.
+                       &
+car(Lastname, bmw, green, \_)
+\newline = \newline
+car(stasov, bmw,     green,  3700)
+                       \\ \hline
+
+24
+                       &
+                       &
+car(Lastname, bmw, green, \_)
+\newline = \newline
+car(stasov, bmw,     green,  3700)
+
+\hfill\contour{black}{$\xrightarrow{\hspace{0.13\textwidth}}$}
+                       &
+е)
+                       &
+Lastname=stasov,
+
+bmw=bmw,
+
+green=green
+                       \\ \hline
+
+25
+                       &
+Lastname=stasov
+                       &
+Lastname=stasov
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+е)
+                       &
+bmw=bmw,
+
+green=green
+                       \\ \hline
+
+26
+                       &
+Lastname=stasov
+                       &
+bmw=bmw
+                       &
+б)
+                       &
+green=green
+                       \\ \hline
+
+27
+                       &
+Lastname=stasov
+                       &
+green=green
+                       &
+б)
+                       &
+                       \\ \hline
+
+                       &
+\textbf{подстановка}
+                       &
+\multicolumn{3}{p{.58\textwidth}|}{успех~--- переход к подцели\newline{}phonebook(Lastname, Phonenum, address(City, \_, \_, \_))}
+                       \\ \hline
+
+\ldots
+                       &
+---
+                       &
+\multicolumn{3}{c|}{пропуск невыполненных унификаций}
+                       \\ \hline
+
+36
+                       &
+                       &
+                       &
+1.
+                       &
+phonebook(stasov, Phonenum, address(City, \_, \_, \_))
+\newline = \newline
+phonebook(stasov, 74024456, address(spb,       marksa,       4,  4)).
+                       \\ \hline
+
+37
+                       &
+                       &
+phonebook(stasov, Phonenum, address(City, \_, \_, \_))
+\newline = \newline
+phonebook(stasov, 74024456, address(spb,       marksa,       4,  4)).
+
+\hfill\contour{black}{$\xrightarrow{\hspace{0.13\textwidth}}$}
+                       &
+е)
+                       &
+stasov=stasov,
+
+Phonenum=74024456,
+
+address(City, \_, \_, \_)\newline=\newline{}address(spb,       marksa,       4,  4)
+                       \\ \hline
+
+38
+                       &
+                       &
+stasov=stasov
+                       &
+б)
+                       &
+Phonenum=74024456,
+
+address(City, \_, \_, \_)\newline=\newline{}address(spb,       marksa,       4,  4)
+                       \\ \hline
+
+39
+                       &
+Phonenum=74024456
+                       &
+Phonenum=74024456
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+address(City, \_, \_, \_)\newline=\newline{}address(spb,       marksa,       4,  4)
+                       \\ \hline
+
+40
+                       &
+Phonenum=74024456
+                       &
+address(City, \_, \_, \_)\newline=\newline{}address(spb,       marksa,       4,  4)
+
+\hfill\contour{black}{$\xrightarrow{\hspace{0.13\textwidth}}$}
+                       &
+е)
+                       &
+City=spb
+                       \\ \hline
+
+41
+                       &
+Phonenum=74024456
+
+City=spb
+                       &
+City=spb
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+                       \\ \hline
+
+                       &
+\textbf{подстановка}
+                       &
+\multicolumn{3}{p{.58\textwidth}|}{успех~--- переход к подцели\newline{}depositor(Lastname, Bankname, \_, \_)}
+                       \\ \hline
+
+\ldots
+                       &
+---
+                       &
+\multicolumn{3}{c|}{пропуск невыполненных унификаций}
+                       \\ \hline
+
+50
+                       &
+                       &
+                       &
+1.
+                       &
+depositor(stasov, Bankname, \_, \_)
+\newline = \newline
+depositor(stasov, sberbank, 1, 423424233)
+                       \\ \hline
+
+51
+                       &
+                       &
+depositor(stasov, Bankname, \_, \_)
+\newline = \newline
+depositor(stasov, sberbank, 1, 423424233)
+
+\hfill\contour{black}{$\xrightarrow{\hspace{0.13\textwidth}}$}
+                       &
+е)
+                       &
+stasov=stasov,
+
+Bankname=sberbank
+                       \\ \hline
+
+52
+                       &
+                       &
+stasov=stasov
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+б)
+                       &
+Bankname=sberbank
+                       \\ \hline
+
+53
+                       &
+Bankname=sberbank
+                       &
+Bankname=sberbank
+
+\contour{black}{$\xleftarrow{\hspace{0.13\textwidth}}$}
+                       &
+г)
+                       &
+                       \\ \hline
+
+                       &
+\textbf{подстановка}
+                       &
+\multicolumn{3}{p{.58\textwidth}|}{успех~--- возврат к\newline{}phonebook(Lastname, Phonenum, address(City, \_, \_, \_))}
+                       \\ \hline
+
+\ldots
+                       &
+---
+                       &
+\multicolumn{3}{c|}{пропуск оставшихся сравнений}
+                       \\ \hline
+
+\end{longtable}
+\normalsize
+
