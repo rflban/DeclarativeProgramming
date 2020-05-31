@@ -1,0 +1,682 @@
+\chapter{Практическая часть}
+В этом разделе приведено описание задания и его решения.
+
+\section{Условие}
+Создать базу знаний «Собственники», дополнив базу знаний, хранящую знания (лаб. 13):
+\begin{itemize}
+    \item \textbf{<<Телефонный справочник>>}: Фамилия, \textnumero{}тел, Адрес~--- структура (Город, Улица, \textnumero{}дома, \textnumero{}кв);
+    \item \textbf{<<Автомобили>>}:  Фамилия\_владельца, Марка, Цвет, Стоимость, и др.;
+    \item \textbf{<<Вкладчики банков>>}: Фамилия, Банк, счет, сумма, др.
+\end{itemize}
+знаниями о дополнительной \textbf{собственности} владельца. \textbf{Преобразовать} знания об \underline{автомобиле} к форме знаний о собственности.
+
+Вид собственности (кроме автомобиля):
+\begin{itemize}
+    \item \textbf{Строение, стоимость} и другие его характеристики;
+        \item \textbf{Участок, стоимость} и другие его характеристики;
+        \item \textbf{Водный транспорт, стоимость} и другие его характеристики.
+\end{itemize}
+
+Описать и использовать вариантный домен: Собственность. Владелец может иметь, но только один объект каждого вида собственности (это касается и автомобиля), или не иметь некоторых видов собственности.
+
+Используя конъюнктивное правило и разные формы задания одного вопроса (пояснять для какого \textnumero{}задания~--- какой вопрос), обеспечить возможность поиска:
+\begin{enumerate}
+    \item Названий всех объектов собственности заданного субъекта,
+    \item Названий и стоимости всех объектов собственности заданного субъекта,
+    \item Разработать правило, позволяющее найти суммарную стоимость всех объектов собственности заданного субъекта.
+\end{enumerate}
+
+Для 2-го пункта и одной фамилии составить таблицу, отражающую конкретный порядок работы системы, с объяснениями порядка работы и особенностей использования доменов.
+
+\section{База знаний}
+
+\begin{lstlisting}[caption={База знаний},label={lst:knowledge}]
+domains
+  lastname, city, street, carbrand, color, bankname, shipname = symbol.
+  phonenum, housenum, apartnum, price, account, deposit = integer.
+  area=real.
+
+  address = address(city, street, housenum, apartnum).
+  own = car(price, carbrand, color);
+        building(price, address);
+        landlot(price, area);
+        ship(price, shipname).
+predicates
+  phonebook(lastname, phonenum, address).
+  depositor(lastname, bankname, account, deposit).
+  owner(lastname, own).
+
+  owns(lastname, symbol, price).
+clauses
+  phonebook(petrov, 74400297,
+            address(moscow,    lenina,       4,  2)).
+  phonebook(igorev, 77270935,
+            address(moscow,    marksa,       3,  5)).
+  phonebook(ivanov, 79345669,
+            address(moscow,    pushkinskaya, 11, 1)).
+  phonebook(stasov, 74024456,
+            address(spb,       marksa,       4,  4)).
+  phonebook(igorev, 73243243,
+            address(volgograd, lenina,       9,  9)).
+
+  depositor(petrov, agricole, 5, 52150322).
+  depositor(igorev, sberbank, 8, 421342352).
+  depositor(ivanov, sberbank, 6, 442423123).
+  depositor(igorev, paribas,  3, 41424214).
+
+  owner(petrov, car     (24000,    ford,    pink)).
+  owner(stasov, car     (55000,    tesla,    purple)).
+  owner(ivanov, building(429999,   address(ekb, lenina, 2,  5))).
+  owner(petrov, landlot (23449999, 43000)).
+  owner(igorev, ship    (86000,    chehov)).
+
+  owns(Lastname, Category, Price) :-
+    owner(Lastname, car(Price, \_, \_)), Category = car.
+  owns(Lastname, Category, Price) :-
+    owner(Lastname, building(Price, \_)), Category = building.
+  owns(Lastname, Category, Price) :-
+    owner(Lastname, landlot(Price, \_)), Category = landlot.
+  owns(Lastname, Category, Price) :-
+    owner(Lastname, ship(Price, \_)), Category = ship.
+\end{lstlisting}
+
+\section{Цели}
+Рассмотрим примеры трёх целей, текст и решение которых приведены в листингах~\ref{lst:ex1},~\ref{lst:ex2}.
+
+\begin{lstlisting}[caption={Пример \textnumero1},label={lst:ex1}]
+goal
+  owns(petrov, Category, _).
+
+% Category=car
+% Category=landlot
+% 2 Solutions
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Пример \textnumero2},label={lst:ex2}]
+goal
+  owns(stasov, Category, Price).
+
+% Category=car, Price=55000
+% 1 Solution
+\end{lstlisting}
+
+\renewcommand{\arraystretch}{1.75}
+\footnotesize
+\begin{longtable}{|c|p{.4625\textwidth}|p{.3625\textwidth}|}
+    \caption{Поиск решения в примере \textnumero1}\label{tbl:ex2} \\
+    \hline
+    \textnumero{} шага & Сравниваемые термы; результат; подстановка (если есть)  & Дальнейшие действия: прямой ход или откат \\
+    \hline
+
+1
+                       &
+\textbf{Сравнение:}\newline
+  owns(stasov, Category, Price)
+  \newline{}и\newline
+  owns(Lastname, Category, Price)
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация выполнена.
+
+  Lastname=stasov,
+
+  Category=Category,
+
+  Price=Price
+                       &
+  В стек откладывается терм
+
+  owns(stasov, Category, Price).
+  \newline
+
+  \textbf{Прямой ход.}
+  \newline
+
+  На резольвенту попадают:
+
+    owner(Lastname, car(Price, \_, \_)),
+
+    Category = car.
+                       \\ \hline
+
+2
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, car(Price, \_, \_))
+  \newline{}и\newline
+  owner(petrov, car     (24000,    ford,    pink))
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+3
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, car(Price, \_, \_))
+  \newline{}и\newline
+  owner(stasov, car     (55000,    tesla,    purple))
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация выполнена.
+
+  Price=5500
+                       &
+  В стек откладывается терм
+
+  owner(stasov, car(Price, \_, \_))
+  \newline
+
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+4
+                       &
+  Category = car~--- терм, в котором используется встроенный предикат =, проводящий попытку унификации передаваемых аргументов.
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация выполнена.
+
+  Category=car
+                       &
+  \textbf{Получено первое решение:}\newline
+  Category=car, Price=55000.
+  \newline
+
+  В стек откладывается терм
+
+  Category = car
+  \newline
+
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+5
+                       &
+  Резольвента пуста.
+
+  \textbf{Результат:}\newline
+  Унификация провалена.
+                       &
+  Из стека восстанавливается терм
+
+  Category = car
+  \newline
+
+  \textbf{Откат.}
+                       \\ \hline
+
+6
+                       &
+  Процедура исчерапана.
+
+  \textbf{Результат:}\newline
+  Унификация провалена.
+                       &
+  Из стека восстанавливается терм
+
+  owner(stasov, car(Price, \_, \_))
+  \newline
+
+  \textbf{Откат.}
+                       \\ \hline
+
+7
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, car(Price, \_, \_))
+  \newline{}и\newline
+  owner(ivanov, building(429999,   address(ekb, lenina, 2,  5)))
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+8
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, car(Price, \_, \_))
+  \newline{}и\newline
+  owner(petrov, landlot (23449999, 43000))
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+9
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, car(Price, \_, \_))
+  \newline{}и\newline
+  owner(igorev, ship    (86000,    chehov)).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+10
+                       &
+  Процедура исчерпана.
+
+  \textbf{Результат:}\newline
+  Унификация провалена.
+                       &
+  Из стека восстанавливается терм
+
+  owner(stasov, car(Price, \_, \_))
+  \newline
+
+  \textbf{Откат.}
+  \newline
+
+  Стек покидают термы:
+
+    owner(Lastname, car(Price, \_, \_)),
+
+    Category = car.
+                       \\ \hline
+
+11
+                       &
+\textbf{Сравнение:}\newline
+  owns(stasov, Category, Price)
+  \newline{}и\newline
+  owns(Lastname, Category, Price)
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация выполнена.
+
+  Lastname=stasov,
+
+  Category=Category,
+
+  Price=Price
+                       &
+  В стек откладывается терм
+
+  owns(stasov, Category, Price).
+  \newline
+
+  \textbf{Прямой ход.}
+  \newline
+
+  На резольвенту попадают:
+
+    owner(Lastname, building(Price, \_)),
+
+    Category = building.
+                       \\ \hline
+
+12
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, building(Price, \_))
+  \newline{}и\newline
+  owner(petrov, car     (24000,    ford,    pink)).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+13
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, building(Price, \_))
+  \newline{}и\newline
+  owner(stasov, car     (55000,    tesla,    purple)).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+14
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, building(Price, \_))
+  \newline{}и\newline
+  owner(ivanov, building(429999,   address(ekb, lenina, 2,  5))).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+15
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, building(Price, \_))
+  \newline{}и\newline
+  owner(petrov, landlot (23449999, 43000)).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+16
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, building(Price, \_))
+  \newline{}и\newline
+  owner(igorev, ship    (86000,    chehov)).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+17
+                       &
+  Процедура исчерпана.
+
+  \textbf{Результат:}\newline
+  Унификация провалена.
+                       &
+  Из стека восстанавливается терм
+
+  owner(stasov, building(Price, \_))
+  \newline
+
+  \textbf{Откат.}
+  \newline
+
+  Стек покидают термы:
+
+    owner(stasov, building(Price, \_)),
+
+    Category = building.
+                       \\ \hline
+
+18
+                       &
+\textbf{Сравнение:}\newline
+  owns(stasov, Category, Price)
+  \newline{}и\newline
+  owns(Lastname, Category, Price)
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация выполнена.
+
+  Lastname=stasov,
+
+  Category=Category,
+
+  Price=Price
+                       &
+  В стек откладывается терм
+
+  owns(stasov, Category, Price).
+  \newline
+
+  \textbf{Прямой ход.}
+  \newline
+
+  На резольвенту попадают:
+
+    owner(Lastname, landlot(Price, \_)),
+
+    Category = landlot.
+                       \\ \hline
+
+19
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, landlot(Price, \_))
+  \newline{}и\newline
+  owner(petrov, car     (24000,    ford,    pink)).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+20
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, landlot(Price, \_))
+  \newline{}и\newline
+  owner(stasov, car     (55000,    tesla,    purple)).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+21
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, landlot(Price, \_))
+  \newline{}и\newline
+  owner(ivanov, building(429999,   address(ekb, lenina, 2,  5))).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+22
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, landlot(Price, \_))
+  \newline{}и\newline
+  owner(petrov, landlot (23449999, 43000)).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+23
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, landlot(Price, \_))
+  \newline{}и\newline
+  owner(igorev, ship    (86000,    chehov)).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+24
+                       &
+  Процедура исчерпана.
+
+  \textbf{Результат:}\newline
+  Унификация провалена.
+                       &
+  Из стека восстанавливается терм
+
+  owns(stasov, Category, Price)
+  \newline
+
+  \textbf{Откат.}
+  \newline
+
+  Стек покидают термы:
+
+    owner(stasov, landlot(Price, \_)),
+
+    Category = landlot.
+                       \\ \hline
+
+25
+                       &
+\textbf{Сравнение:}\newline
+  owns(stasov, Category, Price)
+  \newline{}и\newline
+  owns(Lastname, Category, Price)
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация выполнена.
+
+  Lastname=stasov,
+
+  Category=Category,
+
+  Price=Price
+                       &
+  В стек откладывается терм
+
+  owns(stasov, Category, Price).
+  \newline
+
+  \textbf{Прямой ход.}
+  \newline
+
+  На резольвенту попадают:
+
+    owner(Lastname, ship(Price, \_)),
+
+    Category = ship.
+                       \\ \hline
+
+26
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, ship(Price, \_))
+  \newline{}и\newline
+  owner(petrov, car     (24000,    ford,    pink)).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+27
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, ship(Price, \_))
+  \newline{}и\newline
+  owner(stasov, car     (55000,    tesla,    purple)).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+28
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, ship(Price, \_))
+  \newline{}и\newline
+  owner(ivanov, building(429999,   address(ekb, lenina, 2,  5))).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+29
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, ship(Price, \_))
+  \newline{}и\newline
+  owner(petrov, landlot (23449999, 43000)).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+30
+                       &
+\textbf{Сравнение:}\newline
+  owner(stasov, ship(Price, \_))
+  \newline{}и\newline
+  owner(igorev, ship    (86000,    chehov)).
+  \newline
+
+  \textbf{Результат:}\newline
+  Унификация не выполнена.
+                       &
+  \textbf{Прямой ход.}
+                       \\ \hline
+
+31
+                       &
+  Процедура исчерпана.
+
+  \textbf{Результат:}\newline
+  Унификация провалена.
+                       &
+  Из стека восстанавливается терм
+  owns(stasov, Category, Price)
+
+  \newline
+
+  \textbf{Откат.}
+  \newline
+
+  Стек покидают термы:
+
+    owner(stasov, ship(Price, \_)),
+
+    Category = ship.
+                       \\ \hline
+
+32
+                       &
+  Процедура исчерпана.
+
+  \textbf{Результат:}\newline
+  Унификация провалена.
+                       &
+  Стек покидает терм
+
+  owns(stasov, Category, Price)
+  \newline
+
+  Поиск решений завершен. \textbf{Найдено одно решение.}
+                       \\ \hline
+\end{longtable}
+\normalsize
+
